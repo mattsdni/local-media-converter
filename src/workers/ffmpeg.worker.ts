@@ -18,12 +18,13 @@ const ffmpeg = new FFmpeg()
 let loadPromise: Promise<boolean> | null = null
 let cancelled = false
 
+const FFMPEG_CDN = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm'
+
 function loadFfmpeg(): Promise<boolean> {
   if (loadPromise) return loadPromise
-  const baseURL = '/ffmpeg'
   loadPromise = Promise.all([
-    toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-    toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    toBlobURL(`${FFMPEG_CDN}/ffmpeg-core.js`, 'text/javascript'),
+    toBlobURL(`${FFMPEG_CDN}/ffmpeg-core.wasm`, 'application/wasm'),
   ])
     .then(([coreURL, wasmURL]) => ffmpeg.load({ coreURL, wasmURL }))
     .catch((err) => {

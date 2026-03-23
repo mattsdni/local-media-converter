@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Large ffmpeg WASM assets (loaded from CDN at runtime)
+public/ffmpeg/ffmpeg-core.js
+public/ffmpeg/ffmpeg-core.wasm
+public/ffmpeg/ffmpeg-core.worker.js
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
