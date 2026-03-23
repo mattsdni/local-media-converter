@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+/* Indeterminate bar bounce */
+@keyframes slide {
+  0%   { transform: translateX(-150%); }
+  60%  { transform: translateX(250%); }
+  100% { transform: translateX(250%); }
+}
+
+/* Shimmer sweep across progress bar fill */
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Animated ellipsis: . → .. → ... → (repeat) */
+@keyframes dots {
+  0%,
+  24%  { content: '.';   }
+  25%,
+  49%  { content: '..';  }
+  50%,
+  74%  { content: '...'; }
+  75%,
+  100% { content: '';    }
+}
+
+.animated-dots::after {
+  content: '';
+  animation: dots 1.6s steps(1) infinite;
+  display: inline-block;
+  min-width: 1.4ch;
+  text-align: left;
+}
