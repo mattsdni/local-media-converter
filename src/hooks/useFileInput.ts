@@ -5,19 +5,54 @@ import type { VideoMetadata } from '../conversion/types'
 const ACCEPTED_TYPES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo']
 const MAX_SIZE_BYTES = 500 * 1024 * 1024 // 500 MB
 
+type RVFC = (cb: (now: number, meta: { mediaTime: number }) => void) => void
+
+async function detectFps(video: HTMLVideoElement): Promise<number> {
+  const rvfc: RVFC | undefined = (video as any).requestVideoFrameCallback?.bind(video)
+  if (!rvfc) return 30
+
+  return new Promise<number>((resolve) => {
+    const times: number[] = []
+    const SAMPLES = 6
+    let done = false
+
+    function finish() {
+      if (done) return
+      done = true
+      video.pause()
+      const intervals = times.slice(1).map((t, i) => t - times[i]).filter(d => d > 0)
+      if (intervals.length === 0) { resolve(30); return }
+      const avg = intervals.reduce((a, b) => a + b) / intervals.length
+      resolve(Math.round(1 / avg))
+    }
+
+    function onFrame(_: number, meta: { mediaTime: number }) {
+      times.push(meta.mediaTime)
+      if (times.length >= SAMPLES) { finish(); return }
+      rvfc(onFrame)
+    }
+
+    rvfc(onFrame)
+    video.muted = true
+    video.play().catch(() => { done = true; resolve(30) })
+    setTimeout(finish, 2000)
+  })
+}
+
 async function readVideoMetadata(file: File): Promise<VideoMetadata> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file)
     const video = document.createElement('video')
     video.preload = 'metadata'
-    video.onloadedmetadata = () => {
-      const meta = {
+    video.onloadedmetadata = async () => {
+      const fps = await detectFps(video)
+      URL.revokeObjectURL(url)
+      resolve({
         durationSec: video.duration,
         width: video.videoWidth,
         height: video.videoHeight,
-      }
-      URL.revokeObjectURL(url)
-      resolve(meta)
+        fps,
+      })
     }
     video.onerror = () => {
       URL.revokeObjectURL(url)

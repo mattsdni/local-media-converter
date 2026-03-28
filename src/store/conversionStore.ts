@@ -11,6 +11,8 @@ import type {
 
 export type AppPhase = 'idle' | 'file-selected' | 'converting' | 'complete' | 'error'
 
+const MAX_FPS = 60
+
 const defaultOptions: ConversionOptions = {
   fps: 10,
   scale: 480,
@@ -38,6 +40,7 @@ interface ConversionState {
   failConversion: (e: ConversionError) => void
   cancelConversion: () => void
   reset: () => void
+  backToSettings: () => void
 }
 
 export const useConversionStore = create<ConversionState>()(
@@ -56,10 +59,23 @@ export const useConversionStore = create<ConversionState>()(
       setCapability: (cap) => set({ capability: cap }),
 
       setInputFile: (file, metadata) =>
-        set({ inputFile: file, inputMetadata: metadata, phase: 'file-selected', result: null, error: null }),
+        set((s) => ({
+          inputFile: file,
+          inputMetadata: metadata,
+          phase: 'file-selected',
+          result: null,
+          error: null,
+          options: { ...s.options, fps: Math.min(s.options.fps, metadata.fps) },
+        })),
 
       updateOptions: (partial) =>
-        set((s) => ({ options: { ...s.options, ...partial } })),
+        set((s) => ({
+          options: {
+            ...s.options,
+            ...partial,
+            fps: Math.min(partial.fps ?? s.options.fps, MAX_FPS),
+          },
+        })),
 
       startConversion: (controller) =>
         set({ phase: 'converting', progress: null, error: null, abortController: controller }),
@@ -95,11 +111,21 @@ export const useConversionStore = create<ConversionState>()(
           error: null,
           abortController: null,
         }),
+
+      backToSettings: () =>
+        set({ phase: 'file-selected', result: null, error: null }),
     }),
     {
       name: 'media-converter-options',
-      // Only persist user options, not runtime state
       partialize: (s) => ({ options: s.options }),
+      merge: (persisted, current) => ({
+        ...current,
+        options: {
+          ...(current as ConversionState).options,
+          ...(persisted as Partial<ConversionState>).options,
+          fps: Math.min(((persisted as Partial<ConversionState>).options?.fps ?? defaultOptions.fps), MAX_FPS),
+        },
+      }),
     },
   ),
 )

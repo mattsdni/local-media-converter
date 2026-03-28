@@ -53,6 +53,7 @@ export interface VideoMetadata {
   durationSec: number
   width: number
   height: number
+  fps: number
 }
 
 export interface CapabilityReport {

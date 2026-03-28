@@ -57,8 +57,15 @@ async function convertVideoToGif(file: File, options: ConversionOptions): Promis
 
   const srcW = frames[0].width
   const srcH = frames[0].height
-  const dstW = options.scale > 0 ? options.scale : srcW
-  const dstH = Math.round(srcH * (dstW / srcW))
+  let dstW: number, dstH: number
+  if (options.scale > 0) {
+    const ratio = Math.min(options.scale / srcW, options.scale / srcH)
+    dstW = Math.round(srcW * ratio)
+    dstH = Math.round(srcH * ratio)
+  } else {
+    dstW = srcW
+    dstH = srcH
+  }
 
   send({ type: 'progress', data: { stage: 'processing', framesTotal: totalFrames, framesProcessed: 0, percent: 10, message: 'Building color palette…' } })
 

@@ -203,9 +203,10 @@ function ditherToFfmpeg(dither: ConversionOptions['dither']): string {
 }
 
 function buildFilterComplex(options: ConversionOptions): string {
-  const scale = options.scale > 0 ? `scale=${options.scale}:-1:flags=lanczos` : 'scale=iw:ih'
+  const scale = options.scale > 0 ? `scale=${options.scale}:${options.scale}:force_original_aspect_ratio=decrease:flags=lanczos` : 'scale=iw:ih'
   const dither = ditherToFfmpeg(options.dither)
-  return `fps=${options.fps},${scale},split[s0][s1];[s0]palettegen=max_colors=256[p];[s1][p]paletteuse=dither=${dither}`
+  const maxColors = Math.round(16 + (options.quality - 1) * (240 / 9))
+  return `fps=${options.fps},${scale},split[s0][s1];[s0]palettegen=max_colors=${maxColors}[p];[s1][p]paletteuse=dither=${dither}:diff_mode=rectangle`
 }
 
 function send(msg: WorkerOutput) {

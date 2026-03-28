@@ -4,6 +4,7 @@ import { useConversionStore } from '../../store/conversionStore'
 export function OutputPreview() {
   const result = useConversionStore((s) => s.result)
   const reset = useConversionStore((s) => s.reset)
+  const backToSettings = useConversionStore((s) => s.backToSettings)
   const inputFile = useConversionStore((s) => s.inputFile)
   const [objectUrl, setObjectUrl] = useState<string | null>(null)
 
@@ -61,6 +62,13 @@ export function OutputPreview() {
         className="w-full py-3 px-6 rounded-xl bg-green-600 hover:bg-green-700 active:scale-[0.98] text-white font-semibold text-base transition-all shadow-sm"
       >
         Download GIF · {sizeMb} MB
+      </button>
+
+      <button
+        onClick={backToSettings}
+        className="w-full py-2.5 px-6 rounded-xl bg-white hover:bg-gray-50 active:scale-[0.98] text-gray-700 font-medium text-sm border border-gray-200 transition-all"
+      >
+        Adjust settings &amp; convert again
       </button>
     </div>
   )

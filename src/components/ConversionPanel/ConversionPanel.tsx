@@ -15,8 +15,11 @@ export function ConversionPanel() {
       ? options.endTime - options.startTime
       : options.endTime ?? inputMetadata.durationSec
     const frames = options.fps * durationSec
-    const w = options.scale > 0 ? options.scale : inputMetadata.width
-    const h = Math.round(inputMetadata.height * (w / inputMetadata.width))
+    const ratio = options.scale > 0
+      ? Math.min(options.scale / inputMetadata.width, options.scale / inputMetadata.height)
+      : 1
+    const w = Math.round(inputMetadata.width * ratio)
+    const h = Math.round(inputMetadata.height * ratio)
     const bytes = frames * w * h * 0.75 * 0.4 // empirical
     return (bytes / 1024 / 1024).toFixed(0)
   })()

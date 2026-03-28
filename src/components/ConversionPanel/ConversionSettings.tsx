@@ -1,5 +1,14 @@
+import { useMemo } from 'react'
 import { useConversionStore } from '../../store/conversionStore'
 import type { ConversionOptions } from '../../conversion/types'
+
+// Browsers that enforce a minimum GIF frame delay of 2cs (20ms).
+// Frames with delays below this get bumped to 10cs (10fps) by the renderer.
+const GIF_BROWSER_FPS_CAP = 50
+function hasBrowserGifCap(): boolean {
+  const ua = navigator.userAgent
+  return /Chrome\//.test(ua) || /Firefox\//.test(ua)
+}
 
 const SCALE_OPTIONS = [
   { label: '240px', value: 240 },
@@ -20,6 +29,8 @@ export function ConversionSettings() {
     updateOptions({ [key]: value })
   }
 
+  const showBrowserCapWarning = useMemo(() => hasBrowserGifCap(), [])
+  const maxFps = inputMetadata ? Math.min(inputMetadata.fps, 60) : 60
   const showTrim = inputMetadata && inputMetadata.durationSec > 2
 
   return (
@@ -33,20 +44,25 @@ export function ConversionSettings() {
         <input
           type="range"
           min={1}
-          max={30}
+          max={maxFps}
           value={options.fps}
           onChange={(e) => set('fps', Number(e.target.value))}
           className="w-full accent-indigo-600"
         />
         <div className="flex justify-between text-xs text-gray-400">
           <span>1 (smaller file)</span>
-          <span>30 (smoother)</span>
+          <span>{maxFps} (source)</span>
         </div>
+        {showBrowserCapWarning && options.fps > GIF_BROWSER_FPS_CAP && (
+          <p className="text-xs text-amber-600">
+            Your browser enforces a minimum 2cs frame delay — above 50fps frames get clamped to 10fps. Stay at 50fps or below.
+          </p>
+        )}
       </div>
 
       {/* Scale */}
       <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-gray-700">Output width</label>
+        <label className="block text-sm font-medium text-gray-700">Output size</label>
         <div className="flex flex-wrap gap-2">
           {SCALE_OPTIONS.map((opt) => (
             <button
@@ -61,6 +77,26 @@ export function ConversionSettings() {
               {opt.label}
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* Quality */}
+      <div className="space-y-1.5">
+        <div className="flex justify-between text-sm">
+          <label className="font-medium text-gray-700">Quality</label>
+          <span className="text-gray-500">{options.quality} / 10</span>
+        </div>
+        <input
+          type="range"
+          min={1}
+          max={10}
+          value={options.quality}
+          onChange={(e) => set('quality', Number(e.target.value))}
+          className="w-full accent-indigo-600"
+        />
+        <div className="flex justify-between text-xs text-gray-400">
+          <span>1 (smaller file)</span>
+          <span>10 (more colors)</span>
         </div>
       </div>
 
