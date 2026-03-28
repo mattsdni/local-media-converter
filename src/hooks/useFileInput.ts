@@ -10,6 +10,7 @@ type RVFC = (cb: (now: number, meta: { mediaTime: number }) => void) => void
 async function detectFps(video: HTMLVideoElement): Promise<number> {
   const rvfc: RVFC | undefined = (video as any).requestVideoFrameCallback?.bind(video)
   if (!rvfc) return 30
+  const callRvfc: RVFC = rvfc
 
   return new Promise<number>((resolve) => {
     const times: number[] = []
@@ -29,7 +30,7 @@ async function detectFps(video: HTMLVideoElement): Promise<number> {
     function onFrame(_: number, meta: { mediaTime: number }) {
       times.push(meta.mediaTime)
       if (times.length >= SAMPLES) { finish(); return }
-      rvfc(onFrame)
+      callRvfc(onFrame)
     }
 
     rvfc(onFrame)
